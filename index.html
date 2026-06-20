@@ -1,0 +1,963 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>大向小学校DB</title>
+<style>
+:root{
+  --canvas:#222230;
+  --panel:#2B2A3A;
+  --card:#3F3D53;
+  --card-2:#494764;
+  --portrait:#34324A;
+  --line:rgba(148,149,151,.16);
+  --line-2:rgba(148,149,151,.28);
+  --gray:#9A9BA4;
+  --muted:#6E6E82;
+  --ink:#ECEBF2;
+  --accent:#F2DF68;
+  --accent-press:#E6D04F;
+  --lilac:#9F9BC0;
+  --ok:#7FD1A0;
+  --bad:#D98A8A;
+  --r:14px;
+  --display:'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --mono:ui-monospace,'SF Mono','SFMono-Regular',Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--canvas);color:var(--ink);font-family:var(--display);
+  font-feature-settings:"palt" 1;-webkit-font-smoothing:antialiased;line-height:1.55;font-weight:300}
+button{font-family:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+::selection{background:var(--accent);color:#23222F}
+
+.app{display:grid;grid-template-columns:240px 1fr;min-height:100%}
+.rail{position:sticky;top:0;align-self:start;height:100vh;background:var(--panel);
+  border-right:1px solid var(--line);display:flex;flex-direction:column;padding:26px 18px;gap:26px}
+.brand{display:flex;align-items:center;gap:11px;padding-left:6px}
+.brand-mark{width:13px;height:13px;border-radius:50%;background:var(--accent);
+  box-shadow:0 0 0 5px rgba(242,223,104,.14);flex:0 0 auto}
+.brand-name{font-weight:500;font-size:8px;letter-spacing:.01em}
+.brand-sub{font-family:var(--mono);font-size:10px;letter-spacing:.16em;color:var(--muted);text-transform:uppercase;margin-top:2px}
+
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav-eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--muted);
+  text-transform:uppercase;padding:0 12px 8px}
+.nav-item{position:relative;display:flex;align-items:center;width:100%;text-align:left;background:none;border:0;
+  color:var(--gray);padding:11px 12px;border-radius:10px;font-size:14px;font-weight:500;letter-spacing:.01em;
+  transition:background .18s,color .18s}
+.nav-item:hover{background:rgba(148,149,151,.07);color:var(--ink)}
+.nav-item .rl-slash{font-family:var(--mono);color:var(--muted);font-size:12px;margin-right:11px;
+  font-weight:500;transition:color .18s}
+.nav-item .ct{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.nav-item[aria-current="page"]{color:var(--ink);background:rgba(242,223,104,.08)}
+.nav-item[aria-current="page"] .rl-slash{color:var(--accent)}
+.nav-item[aria-current="page"]::before{content:"";position:absolute;left:0;width:3px;height:18px;background:var(--accent);border-radius:0 3px 3px 0}
+.nav-sep{height:1px;background:var(--line);margin:10px 12px}
+.nav-signup{color:var(--ink)}
+.nav-signup .rl-slash{color:var(--accent)}
+
+.rail-foot{margin-top:auto;display:flex;align-items:center;gap:11px;padding:12px 8px;border-top:1px solid var(--line)}
+.me-dot{width:30px;height:30px;border-radius:9px;background:var(--lilac);flex:0 0 auto;display:grid;place-items:center;color:#23222F;font-weight:600;font-size:12px}
+.me-name{font-size:13px;font-weight:500}
+.me-role{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.08em}
+
+.stage{min-width:0;display:flex;flex-direction:column}
+.topbar{position:sticky;top:0;z-index:5;background:rgba(34,34,48,.86);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);padding:20px 30px 16px;display:flex;align-items:flex-end;justify-content:space-between;gap:18px}
+.topbar h1{margin:0;font-size:23px;font-weight:600;letter-spacing:-.01em}
+.topbar h1 .slash{font-family:var(--mono);color:var(--accent);font-size:.7em;margin-right:.18em;font-weight:500;letter-spacing:0}
+.topbar .lead{color:var(--gray);font-size:13px;margin-top:3px}
+.topbar .eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--accent);text-transform:uppercase;margin-bottom:7px}
+.topbar-right{display:flex;align-items:center;gap:12px}
+
+.btn{border:1px solid var(--line-2);background:transparent;color:var(--ink);padding:10px 16px;border-radius:10px;
+  font-size:13px;font-weight:500;transition:border-color .18s,background .18s}
+.btn:hover{border-color:var(--gray)}
+.btn-pri{background:var(--accent);border-color:var(--accent);color:#23222F}
+.btn-pri:hover{background:var(--accent-press);border-color:var(--accent-press)}
+.btn-sm{padding:7px 12px;font-size:12px;border-radius:8px}
+
+.hamb{display:inline-flex;flex-direction:column;justify-content:center;gap:5px;width:42px;height:42px;
+  border:1px solid var(--line-2);background:transparent;border-radius:11px;align-items:center}
+.hamb span{display:block;height:2px;width:19px;background:var(--ink);border-radius:2px;transition:transform .25s,opacity .25s}
+.hamb:hover{border-color:var(--gray)}
+.hamb[aria-expanded="true"] span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+.hamb[aria-expanded="true"] span:nth-child(2){opacity:0}
+.hamb[aria-expanded="true"] span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+
+.scroll{padding:30px 30px 110px;overflow:auto}
+.view{display:none}
+.view.is-active{display:block;animation:fade .35s ease both}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* home launcher */
+.home-hero{padding:10px 0 26px}
+.hh-eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.22em;color:var(--accent);text-transform:uppercase}
+.hh-title{font-size:clamp(34px,6vw,56px);font-weight:600;letter-spacing:-.02em;margin:14px 0 0;line-height:1.04}
+.hh-db{font-family:var(--mono);color:var(--accent);font-size:.42em;vertical-align:super;letter-spacing:.04em;margin-left:.18em}
+.hh-lead{color:var(--gray);font-size:14.5px;margin:16px 0 0;max-width:560px}
+
+.home-menu{margin-top:14px;border-top:1px solid var(--line)}
+.home-row{display:flex;align-items:center;gap:18px;width:100%;text-align:left;background:none;border:0;
+  border-bottom:1px solid var(--line);color:var(--ink);padding:22px 12px;transition:background .2s,padding .2s}
+.home-row:hover{background:rgba(242,223,104,.05);padding-left:22px}
+.home-row .slash{font-family:var(--mono);color:var(--accent);font-size:15px;font-weight:500;flex:0 0 auto;width:36px}
+.hr-main{display:flex;flex-direction:column;gap:2px;min-width:0}
+.hr-en{font-size:clamp(12px,1.92vw,17.4px);font-weight:600;letter-spacing:-.01em;line-height:1.1}
+.hr-jp{color:var(--gray);font-size:13px}
+.hr-no{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.1em;flex:0 0 auto}
+.hr-arrow{font-size:18px;color:var(--muted);opacity:0;transform:translateX(-6px);transition:.2s;flex:0 0 auto;width:18px;margin-left:auto}
+.home-row:hover .hr-arrow{opacity:1;transform:none;color:var(--accent)}
+
+.home-now{margin-top:36px}
+.section-eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;margin:0 0 14px}
+.home-strip{display:flex;gap:12px;flex-wrap:wrap}
+.strip-px{width:62px;height:62px;border-radius:11px;overflow:hidden;background:var(--portrait);border:1px solid var(--line);padding:0;flex:0 0 auto;transition:transform .2s,border-color .2s}
+.strip-px:hover{transform:translateY(-4px);border-color:var(--line-2)}
+.strip-px svg{width:100%;height:100%;display:block}
+
+/* list / gallery */
+.filterbar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px}
+.chip{border:1px solid var(--line-2);background:transparent;color:var(--gray);padding:7px 14px;border-radius:999px;font-size:12.5px;font-weight:500;transition:.16s}
+.chip:hover{color:var(--ink);border-color:var(--gray)}
+.chip[aria-pressed="true"]{background:var(--ink);color:#23222F;border-color:var(--ink)}
+.wall{display:grid;grid-template-columns:repeat(auto-fill,minmax(238px,1fr));gap:30px 26px}
+.frame{position:relative}
+.frame .spot{position:absolute;top:-15px;left:50%;transform:translateX(-50%);width:18px;height:18px;border-radius:50%;
+  background:radial-gradient(circle at 50% 38%,#f4f4f6,#bdbdc8);opacity:0;transition:opacity .25s;z-index:2;box-shadow:0 6px 18px -4px rgba(244,244,246,.4)}
+.frame:hover .spot{opacity:1}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;
+  transition:transform .22s ease,border-color .22s;cursor:pointer;text-align:left;width:100%;color:inherit;padding:0;display:block}
+.frame:hover .card{transform:translateY(-6px);border-color:var(--line-2)}
+.portrait{aspect-ratio:1/1;background:var(--portrait);position:relative}
+.portrait svg{display:block;width:100%;height:100%}
+.portrait::after{content:"";position:absolute;inset:8px;border:1px solid rgba(148,149,151,.18);border-radius:6px;pointer-events:none}
+.card-body{padding:15px 16px 17px}
+.card-name{font-size:16px;font-weight:600;letter-spacing:.01em}
+.card-job{color:var(--gray);font-size:12.5px;margin-top:3px}
+.card-co{color:var(--muted);font-size:11.5px;font-family:var(--mono);letter-spacing:.02em;margin-top:8px}
+.status{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-family:var(--mono);letter-spacing:.05em;padding:4px 9px;border-radius:999px;margin-top:12px;text-transform:uppercase}
+.status.hire{color:var(--accent);background:rgba(242,223,104,.1)}
+.status.open{color:var(--lilac);background:rgba(159,155,192,.12)}
+.status.connect{color:var(--gray);background:rgba(148,149,151,.1)}
+.status.closed{color:var(--muted);background:rgba(110,110,130,.12)}
+.status .d{width:6px;height:6px;border-radius:50%;background:currentColor}
+
+.panel-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:22px 24px}
+
+/* schedule */
+.sched-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin-bottom:6px}
+.sched-title{font-size:19px;font-weight:600}
+.sched-meta{color:var(--gray);font-size:12.5px;font-family:var(--mono)}
+.best{margin:18px 0 22px;display:flex;align-items:center;gap:14px;background:rgba(242,223,104,.07);border:1px solid rgba(242,223,104,.22);border-radius:12px;padding:14px 18px}
+.best .bk{font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--accent);text-transform:uppercase}
+.best .bd{font-size:20px;font-weight:600;margin-top:2px}
+.best .bn{margin-left:auto;text-align:right}
+.best .bn b{font-size:22px;font-weight:600;color:var(--accent);font-family:var(--mono)}
+.best .bn span{display:block;font-size:11px;color:var(--gray)}
+.grid-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}
+table.sched{border-collapse:collapse;width:100%;min-width:520px}
+table.sched th,table.sched td{padding:11px 10px;text-align:center;border-bottom:1px solid var(--line);font-size:13px}
+table.sched thead th{font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--gray);font-weight:500;background:rgba(148,149,151,.04)}
+table.sched th.who{text-align:left;font-family:var(--display);font-weight:500;color:var(--ink);font-size:13.5px;min-width:140px}
+table.sched td.who{text-align:left;font-weight:500;font-size:13.5px}
+table.sched td.who small{display:block;color:var(--muted);font-weight:400;font-size:11px;font-family:var(--mono)}
+.mark{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:7px;font-weight:600;font-size:14px}
+.mark.o{color:var(--ok)}
+.mark.t{color:var(--accent)}
+.mark.x{color:var(--bad);opacity:.65}
+tr.me-row{background:rgba(159,155,192,.07)}
+tr.me-row td.who{color:var(--lilac)}
+.cell-btn{border:0;background:none;border-radius:7px;padding:0;width:34px;height:34px;transition:background .15s}
+.cell-btn:hover{background:rgba(148,149,151,.1)}
+.bestcol{box-shadow:inset 0 0 0 1.5px rgba(242,223,104,.35)}
+.hint{color:var(--muted);font-size:11.5px;margin-top:12px;font-family:var(--mono)}
+
+/* places */
+.place{display:flex;gap:16px;align-items:center;padding:16px 4px;border-bottom:1px solid var(--line)}
+.place:last-child{border-bottom:0}
+.place-thumb{width:54px;height:54px;border-radius:11px;background:var(--portrait);flex:0 0 auto;display:grid;place-items:center;color:var(--accent)}
+.place-main{min-width:0;flex:1}
+.place-name{font-size:15.5px;font-weight:600}
+.place-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+.tag{font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;color:var(--gray);border:1px solid var(--line-2);border-radius:6px;padding:3px 8px}
+.vote{display:flex;align-items:center;gap:12px;flex:0 0 auto}
+.vote .cnt{font-family:var(--mono);font-weight:600;font-size:17px;min-width:26px;text-align:right}
+.place.lead-place .place-name::after{content:"候補";font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:#23222F;background:var(--accent);border-radius:5px;padding:2px 7px;margin-left:10px;vertical-align:middle}
+
+/* offers / help wanted */
+.tabs{display:flex;gap:6px;margin-bottom:22px;border-bottom:1px solid var(--line)}
+.tab{background:none;border:0;color:var(--gray);font-size:14px;font-weight:500;padding:10px 4px;margin-right:18px;border-bottom:2px solid transparent;transition:.16s}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.offer{display:flex;gap:15px;padding:18px 0;border-bottom:1px solid var(--line)}
+.offer:last-child{border-bottom:0}
+.offer-av{width:42px;height:42px;border-radius:10px;flex:0 0 auto;display:grid;place-items:center;font-weight:600;color:#23222F;font-size:14px}
+.offer-main{flex:1;min-width:0}
+.offer-top{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
+.offer-name{font-weight:600;font-size:15px}
+.offer-role{font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:.04em}
+.offer-time{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.offer-msg{color:var(--gray);font-size:13px;margin-top:6px}
+.offer-actions{display:flex;gap:8px;margin-top:12px}
+.empty{text-align:center;color:var(--muted);padding:46px 0;font-size:13.5px}
+
+/* board */
+.board-new{margin-bottom:20px}
+.post{display:flex;gap:14px;padding:18px 0;border-bottom:1px solid var(--line)}
+.post:last-child{border-bottom:0}
+.post-av{width:40px;height:40px;border-radius:10px;flex:0 0 auto;display:grid;place-items:center;font-weight:600;color:#23222F;font-size:14px}
+.post-main{flex:1;min-width:0}
+.post-top{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.post-name{font-weight:600;font-size:14.5px}
+.post-cat{font-family:var(--mono);font-size:10px;letter-spacing:.06em;color:var(--accent);border:1px solid rgba(242,223,104,.3);border-radius:6px;padding:2px 7px;text-transform:uppercase}
+.post-time{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.post-text{color:var(--gray);font-size:13.5px;margin-top:7px;line-height:1.65}
+.post-actions{display:flex;align-items:center;gap:10px;margin-top:11px}
+.post-btn{display:inline-flex;align-items:center;gap:6px;background:none;border:1px solid var(--line-2);color:var(--gray);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:500;transition:border-color .16s,color .16s,background .16s}
+.post-btn:hover{color:var(--ink);border-color:var(--gray)}
+.post-btn.liked{color:var(--accent);border-color:rgba(242,223,104,.4);background:rgba(242,223,104,.07)}
+.post-btn .ic{font-size:13px}
+.replies{margin-top:12px;padding-left:18px;border-left:2px solid var(--line);display:flex;flex-direction:column;gap:10px}
+.reply{display:flex;gap:10px;align-items:flex-start}
+.reply-av{width:26px;height:26px;border-radius:7px;flex:0 0 auto;display:grid;place-items:center;font-weight:500;color:#23222F;font-size:10px}
+.reply-body{flex:1;min-width:0}
+.reply-name{font-size:12px;font-weight:500;display:inline}
+.reply-time{font-family:var(--mono);font-size:10px;color:var(--muted);margin-left:8px}
+.reply-text{color:var(--gray);font-size:12.5px;margin-top:3px;line-height:1.55}
+.reply-form{display:flex;gap:8px;margin-top:10px;padding-left:18px}
+.reply-form input{flex:1;background:var(--canvas);border:1px solid var(--line-2);color:var(--ink);border-radius:9px;padding:8px 12px;font-family:inherit;font-size:13px}
+.reply-form input::placeholder{color:var(--muted)}
+.reply-form button{flex:0 0 auto}
+
+/* modal */
+.scrim{position:fixed;inset:0;background:rgba(20,20,28,.66);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;z-index:60;padding:20px}
+.scrim.is-open{display:flex;animation:fade .2s ease both}
+.modal{background:var(--panel);border:1px solid var(--line-2);border-radius:18px;width:100%;max-width:460px;max-height:90vh;overflow:auto}
+.modal-hd{padding:22px 24px 18px;border-bottom:1px solid var(--line);display:flex;gap:15px;align-items:center}
+.modal-hd .px{width:60px;height:60px;border-radius:12px;overflow:hidden;background:var(--portrait);flex:0 0 auto}
+.modal-hd .px svg{width:100%;height:100%;display:block}
+.modal-bd{padding:22px 24px 24px}
+.modal-bd label{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.modal-bd .field+.field{margin-top:18px}
+.modal-bd input,.modal-bd textarea,.modal-bd select{width:100%;background:var(--canvas);border:1px solid var(--line-2);color:var(--ink);border-radius:10px;padding:11px 13px;font-family:inherit;font-size:14px}
+.modal-bd textarea{resize:vertical;min-height:84px;line-height:1.6}
+.two{display:flex;gap:12px}
+.two .field{flex:1}
+.modal-ft{display:flex;gap:10px;justify-content:flex-end;margin-top:24px}
+.kv{display:flex;gap:10px;font-size:13px;margin-top:9px}
+.kv .k{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;min-width:74px;padding-top:1px}
+.kv .v{color:var(--ink)}
+.x-close{margin-left:auto;background:none;border:0;color:var(--gray);font-size:22px;line-height:1;padding:2px 6px;border-radius:8px}
+.x-close:hover{color:var(--ink);background:rgba(148,149,151,.1)}
+
+/* drawer */
+.menu-scrim{position:fixed;inset:0;background:rgba(20,20,28,.5);backdrop-filter:blur(3px);display:none;z-index:55}
+.menu-scrim.is-open{display:block;animation:fade .2s ease both}
+.drawer{position:fixed;top:0;right:0;height:100%;width:min(344px,86vw);background:var(--panel);border-left:1px solid var(--line-2);
+  transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;padding:24px 20px;overflow:auto}
+.menu-scrim.is-open .drawer{transform:none}
+.drawer-hd{display:flex;align-items:center;gap:11px;margin-bottom:14px;padding-bottom:18px;border-bottom:1px solid var(--line)}
+.drawer .home-row{padding:15px 8px}
+.drawer .hr-en{font-size:10.8px}
+.drawer .slash{width:30px;font-size:13px}
+.drawer-foot{margin-top:auto;padding-top:16px;color:var(--muted);font-family:var(--mono);font-size:10px;letter-spacing:.1em}
+
+/* toast */
+.toast{position:fixed;left:50%;bottom:32px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#23222F;font-weight:500;font-size:13.5px;padding:13px 20px;border-radius:11px;box-shadow:0 14px 40px -10px rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:.3s;z-index:70}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+@media (max-width:760px){
+  .app{grid-template-columns:1fr}
+  .rail{display:none}
+  .topbar{padding:16px 18px 13px}
+  .scroll{padding:22px 18px 80px}
+  .wall{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:26px 16px}
+  .topbar .lead{display:none}
+}
+/* lighter gothic tuning */
+.eyebrow,.section-eyebrow,.hh-eyebrow,.nav-eyebrow,.status,.tag,.post-cat,.offer-role,.kv .k,.modal-bd label,.mark,.best .bk{font-weight:500}
+.card-co,.sched-meta,.me-role,.offer-time,.post-time,.hr-no{font-weight:400}
+.btn-home{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line-2);background:transparent;color:var(--gray);padding:9px 14px;border-radius:10px;font-size:12.5px;font-weight:500;transition:border-color .18s,color .18s}
+.btn-home:hover{color:var(--ink);border-color:var(--gray)}
+.btn-home .ar{font-family:var(--mono);color:var(--accent);font-size:13px}
+.btn-home[hidden]{display:none}
+@media (max-width:760px){.btn-home span.lbl{display:none}.btn-home{padding:9px 11px}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <aside class="rail">
+    <div class="brand">
+      <span class="brand-mark"></span>
+      <div>
+        <div class="brand-name">大向小学校DB</div>
+        <div class="brand-sub">Omukai E.S. / Alumni</div>
+      </div>
+    </div>
+
+    <nav class="nav" id="nav">
+      <div class="nav-eyebrow">1998年卒 / 6年2組</div>
+      <button class="nav-item" data-key="home" aria-current="page"><span class="rl-slash">///</span>HOME</button>
+      <button class="nav-item" data-key="list"><span class="rl-slash">///</span>LIST<span class="ct" id="ct-list"></span></button>
+      <button class="nav-item" data-key="reunion"><span class="rl-slash">///</span>CLASS REUNION</button>
+      <button class="nav-item" data-key="drinking"><span class="rl-slash">///</span>DRINKING</button>
+      <button class="nav-item" data-key="jobs"><span class="rl-slash">///</span>HELP WANTED<span class="ct" id="ct-jobs"></span></button>
+      <button class="nav-item" data-key="board"><span class="rl-slash">///</span>COMMUNITY BOARD</button>
+      <div class="nav-sep"></div>
+      <button class="nav-item nav-signup" data-key="signup"><span class="rl-slash">///</span>SIGN UP</button>
+    </nav>
+
+    <div class="rail-foot">
+      <span class="me-dot">You</span>
+      <div>
+        <div class="me-name">あなた</div>
+        <div class="me-role">CONTENT DIRECTOR</div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="stage">
+    <header class="topbar">
+      <div>
+        <div class="eyebrow" id="bar-eyebrow"></div>
+        <h1 id="bar-title"></h1>
+        <div class="lead" id="bar-lead"></div>
+      </div>
+      <div class="topbar-right">
+        <button class="btn-home" id="home-btn" hidden><span class="ar">&#8592;</span><span class="lbl">HOME</span></button>
+        <div id="bar-action"></div>
+        <button class="hamb" id="hamb" aria-label="メニューを開く" aria-expanded="false"><span></span><span></span><span></span></button>
+      </div>
+    </header>
+
+    <div class="scroll">
+
+      <section class="view is-active" id="view-home">
+        <div class="home-hero">
+          <div class="hh-eyebrow">Omukai Database / Alumni</div>
+          <h2 class="hh-title">大向小学校<span class="hh-db">DB</span></h2>
+          <p class="hh-lead">同級生の今を、ひとつのデータベースに。名簿から同窓会も飲み会も求人も、ここから始める。</p>
+        </div>
+        <div class="home-menu" id="home-menu"></div>
+        <div class="home-now">
+          <div class="section-eyebrow">Now in the gallery</div>
+          <div class="home-strip" id="home-strip"></div>
+        </div>
+      </section>
+
+      <section class="view" id="view-list">
+        <div class="filterbar" id="filters"></div>
+        <div class="wall" id="wall"></div>
+      </section>
+
+      <section class="view" id="view-reunion">
+        <div class="panel-card">
+          <div class="sched-head">
+            <div><div class="sched-title" id="ev-title"></div><div class="sched-meta" id="ev-meta"></div></div>
+          </div>
+          <div class="best" id="ev-best"></div>
+          <div class="grid-wrap"><table class="sched" id="ev-table"></table></div>
+          <div class="hint">自分の行のセルを押すと ○ 参加 / △ 調整可 / × 不可 が切り替わり、候補日が再計算される</div>
+        </div>
+      </section>
+
+      <section class="view" id="view-drinking">
+        <div class="filterbar" id="place-filters"></div>
+        <div class="panel-card">
+          <div class="section-eyebrow">渋谷 / 個室あり / 8名 / 一人 5,000円前後</div>
+          <div id="place-list"></div>
+        </div>
+      </section>
+
+      <section class="view" id="view-jobs">
+        <div class="tabs" id="offer-tabs">
+          <button class="tab" data-tab="received" aria-selected="true">受け取った</button>
+          <button class="tab" data-tab="sent" aria-selected="false">送った</button>
+        </div>
+        <div class="panel-card"><div id="offer-list"></div></div>
+      </section>
+
+      <section class="view" id="view-board">
+        <div class="panel-card"><div id="board-list"></div></div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<div class="menu-scrim" id="menu-scrim">
+  <aside class="drawer" id="drawer">
+    <div class="drawer-hd">
+      <span class="brand-mark"></span>
+      <div><div class="brand-name" style="font-size:7.5px">大向小学校DB</div>
+      <div class="brand-sub">Menu</div></div>
+      <button class="x-close" id="drawer-x" aria-label="閉じる">&#215;</button>
+    </div>
+    <div class="home-menu" id="drawer-menu" style="border-top:0;margin-top:0"></div>
+    <div class="drawer-foot">OMUKAI E.S. DATABASE / 1998</div>
+  </aside>
+</div>
+
+<div class="scrim" id="scrim"><div class="modal" id="modal"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+var NAVY = "#34324A";
+var YEL = "#F2DF68";
+
+// deterministic hash + rng so each name always renders the same art
+function hash(str){
+  var h = 2166136261 >>> 0;
+  for (var i=0;i<str.length;i++){ h ^= str.charCodeAt(i); h = Math.imul(h,16777619) >>> 0; }
+  return h >>> 0;
+}
+function rngFrom(seed){
+  var s = (seed >>> 0) || 1;
+  return function(){ s ^= s<<13; s>>>=0; s ^= s>>17; s ^= s<<5; s>>>=0; return (s>>>0)/4294967296; };
+}
+// deterministic line-art face per name (outline only)
+function portrait(seed){
+  var r = rngFrom(hash(seed));
+  var SW = 'stroke="'+YEL+'" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"';
+  var heads = [
+    "M30 40 C30 21 42 14 50 14 C58 14 70 21 70 40 C70 59 61 77 50 81 C39 77 30 59 30 40 Z",
+    "M33 41 C33 22 43 15 50 15 C57 15 67 22 67 41 C67 61 60 79 50 83 C40 79 33 61 33 41 Z",
+    "M34 43 C34 24 43 15 50 15 C57 15 66 24 66 43 C66 65 59 81 50 85 C41 81 34 65 34 43 Z",
+    "M30 40 C30 21 42 14 50 14 C58 14 70 21 70 40 C70 57 67 71 59 79 L41 79 C33 71 30 57 30 40 Z"
+  ];
+  var head = heads[Math.floor(r()*heads.length)];
+  var hair = Math.floor(r()*6);
+  var eye = Math.floor(r()*3);
+  var mouth = Math.floor(r()*3);
+  var glasses = r() < 0.26;
+  var brows = r() < 0.66;
+  var s = '<path d="'+head+'" '+SW+'/>';
+  // ears show on shorter hair
+  if (hair===0 || hair===1 || hair===5){
+    s += '<path d="M30 49 C26 50 27 56 31 56" '+SW+'/><path d="M70 49 C74 50 73 56 69 56" '+SW+'/>';
+  }
+  // hair
+  if (hair===0){ s += '<path d="M30 40 C30 16 43 11 50 11 C57 11 70 16 70 40" '+SW+'/>'; }
+  else if (hair===1){ s += '<path d="M30 40 C30 16 43 11 50 11 C57 11 70 16 70 40" '+SW+'/><path d="M50 11 L50 23" '+SW+'/>'; }
+  else if (hair===2){ s += '<path d="M30 41 C30 16 43 11 50 11 C57 11 70 16 70 41 M30 41 C29 57 31 71 34 81 M70 41 C71 57 69 71 66 81" '+SW+'/>'; }
+  else if (hair===3){ s += '<path d="M30 40 C30 16 43 11 50 11 C57 11 70 16 70 40" '+SW+'/><circle cx="50" cy="8" r="5" '+SW+'/>'; }
+  else if (hair===4){ s += '<path d="M31 39 C33 18 44 12 50 12 C57 12 67 17 69 35 C64 24 56 25 50 26 C43 27 37 30 31 39" '+SW+'/>'; }
+  else { s += '<path d="M33 36 C36 20 45 14 50 14 C55 14 64 20 67 36" '+SW+'/>'; }
+  // eyebrows
+  if (brows){ s += '<path d="M37 40 Q41 38 45 40" '+SW+'/><path d="M55 40 Q59 38 63 40" '+SW+'/>'; }
+  // eyes
+  if (eye===0){ s += '<circle cx="41" cy="47" r="2.1" fill="'+YEL+'"/><circle cx="59" cy="47" r="2.1" fill="'+YEL+'"/>'; }
+  else if (eye===1){ s += '<path d="M37 47 Q41 44 45 47" '+SW+'/><path d="M55 47 Q59 44 63 47" '+SW+'/>'; }
+  else { s += '<circle cx="41" cy="47" r="3" '+SW+'/><circle cx="59" cy="47" r="3" '+SW+'/>'; }
+  // glasses
+  if (glasses){ s += '<circle cx="41" cy="47" r="6" '+SW+'/><circle cx="59" cy="47" r="6" '+SW+'/><path d="M47 47 L53 47" '+SW+'/>'; }
+  // nose
+  s += '<path d="M50 50 L48 59 Q50 61 52 59" '+SW+'/>';
+  // mouth
+  if (mouth===0){ s += '<path d="M44 67 L56 67" '+SW+'/>'; }
+  else if (mouth===1){ s += '<path d="M43 65 Q50 72 57 65" '+SW+'/>'; }
+  else { s += '<path d="M46 67 Q50 69 54 67" '+SW+'/>'; }
+  return '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" fill="'+NAVY+'"/>'+s+'</svg>';
+}
+
+var STATUS = {
+  hire:{cls:"hire",label:"求人中"},
+  open:{cls:"open",label:"オファー歓迎"},
+  connect:{cls:"connect",label:"つながり歓迎"},
+  closed:{cls:"closed",label:"募集なし"}
+};
+var MEMBERS = [
+  {id:"m1", name:"佐藤 みなと", job:"Webデザイナー", co:"フリーランス", area:"渋谷", status:"open", bio:"UIとブランディングが主戦場。最近は個人店の立ち上げ支援が多い。"},
+  {id:"m2", name:"田中 そら", job:"飲食店オーナー", co:"sora dining", area:"中目黒", status:"hire", bio:"夜営業の店を2店舗。ホールとSNS担当を探している。"},
+  {id:"m3", name:"鈴木 かえで", job:"看護師", co:"都立病院", area:"新宿", status:"connect", bio:"地域医療チーム。健康相談ならいつでも。"},
+  {id:"m4", name:"高橋 りく", job:"バックエンドエンジニア", co:"株式会社Relay", area:"五反田", status:"open", bio:"Go と AWS 中心。副業・技術顧問の相談は歓迎。"},
+  {id:"m5", name:"伊藤 あおい", job:"美容師 / 店長", co:"hair atelier AOI", area:"代々木", status:"hire", bio:"アシスタント募集中。撮影モデルも探し中。"},
+  {id:"m6", name:"渡辺 たける", job:"不動産エージェント", co:"URBAN estate", area:"恵比寿", status:"open", bio:"店舗物件と居住用どちらも。同窓割あり。"},
+  {id:"m7", name:"山本 ひかり", job:"小学校 教員", co:"区立わかば小", area:"世田谷", status:"connect", bio:"図工と総合が担当。地域イベントの相談相手に。"},
+  {id:"m8", name:"中村 はる", job:"フォトグラファー", co:"haru studio", area:"清澄白河", status:"open", bio:"人物と料理が得意。お店の撮影は割引する。"},
+  {id:"m9", name:"小林 れん", job:"経営者", co:"LEN works 代表", area:"渋谷", status:"hire", bio:"受託制作会社。ディレクター職を増員予定。"},
+  {id:"m10", name:"加藤 ゆい", job:"管理栄養士", co:"ケータリングYUI", area:"三軒茶屋", status:"open", bio:"イベント向けの少量多品目が得意。試食相談歓迎。"},
+  {id:"m11", name:"吉田 かい", job:"営業 / 法人", co:"日本印刷システム", area:"神田", status:"connect", bio:"印刷と紙まわり全般。名刺やフライヤーの相談は速い。"},
+  {id:"m12", name:"松本 のあ", job:"動画編集者", co:"フリーランス", area:"吉祥寺", status:"open", bio:"縦型ショートとMV。月数本なら新規枠あり。"}
+];
+
+var EVENT = {
+  title:"夏の同窓会",
+  dates:["7/12 (土)","7/19 (土)","7/26 (土)","8/2 (土)"],
+  responses:{
+    m1:["o","o","t","x"], m2:["x","o","o","t"], m3:["t","o","o","o"],
+    m4:["o","t","x","o"], m5:["x","o","t","o"], m6:["o","o","o","t"],
+    m9:["t","o","o","x"], m10:["o","o","t","o"]
+  },
+  me:["t","o","t","x"]
+};
+
+var PLACES = [
+  {id:"p1", name:"炭火 まる", genre:"居酒屋", budget:"4,500円", area:"渋谷", room:"個室8名可", votes:9},
+  {id:"p2", name:"trattoria foglia", genre:"イタリアン", budget:"5,500円", area:"渋谷", room:"半個室", votes:5},
+  {id:"p3", name:"焼肉 燈", genre:"焼肉", budget:"6,000円", area:"恵比寿", room:"個室あり", votes:7},
+  {id:"p4", name:"立ち呑み 縁", genre:"バル", budget:"3,000円", area:"渋谷", room:"貸切応相談", votes:3},
+  {id:"p5", name:"和食 みなも", genre:"和食", budget:"5,000円", area:"代官山", room:"完全個室", votes:6}
+];
+
+var OFFERS = {
+  received:[
+    {from:"m9", name:"小林 れん", role:"ディレクター候補", time:"2日前", msg:"受託のディレクションをお願いしたい案件があって。まず一度ランチでも。", color:"#9F9BC0"},
+    {from:"m2", name:"田中 そら", role:"店舗ブランディング", time:"5日前", msg:"新店のロゴと内装の方向性、相談に乗ってほしい。", color:"#F2DF68"}
+  ],
+  sent:[
+    {from:"m8", name:"中村 はる", role:"撮影 / 物撮り", time:"昨日", msg:"今度のイベントのアーカイブ撮影、お願いできる？", color:"#7FD1A0"}
+  ]
+};
+
+var BOARD = [
+  {name:"渡辺 たける", cat:"物件", time:"3時間前", text:"恵比寿で飲食の居抜き物件が出ました。興味ある人いたら連絡ください。同窓割で動きます。", color:"#9F9BC0", likes:4, liked:false, replies:[]},
+  {name:"山本 ひかり", cat:"イベント", time:"昨日", text:"秋の地域フェスで子ども向けワークショップを手伝える人を募集中。図工が得意な人歓迎。", color:"#7FD1A0", likes:7, liked:false, replies:[{name:"加藤 ゆい", color:"#F2DF68", text:"参加したい！詳細教えて", time:"22時間前"}]},
+  {name:"加藤 ゆい", cat:"募集", time:"2日前", text:"ケータリングの試食会をやります。日程は DRINKING の方で調整する予定です。", color:"#F2DF68", likes:3, liked:false, replies:[]},
+  {name:"吉田 かい", cat:"相談", time:"4日前", text:"同窓会用の名刺を作ろうと思っています。デザインできる人、声かけてもらえると助かります。", color:"#9F9BC0", likes:2, liked:false, replies:[{name:"佐藤 みなと", color:"#9F9BC0", text:"デザインできます。DMください！", time:"3日前"}]}
+];
+
+var GALLERY_FILTERS = [
+  {key:"all", label:"すべて"},
+  {key:"hire", label:"求人中"},
+  {key:"open", label:"オファー歓迎"},
+  {key:"connect", label:"つながり歓迎"}
+];
+var PLACE_FILTERS = [
+  {key:"all", label:"すべて"},
+  {key:"渋谷", label:"渋谷"},
+  {key:"恵比寿", label:"恵比寿"},
+  {key:"代官山", label:"代官山"}
+];
+
+// single source for home launcher + drawer
+var MENU = [
+  {key:"signup",   slash:"///", en:"SIGN UP",         jp:"名簿に自分を登録する", no:"00"},
+  {key:"list",     slash:"///", en:"LIST",            jp:"同級生の名簿と現在地", no:"01"},
+  {key:"reunion",  slash:"///", en:"CLASS REUNION",   jp:"同窓会の候補日を決める", no:"02"},
+  {key:"drinking", slash:"///", en:"DRINKING",        jp:"飲み会のお店を投票で決める", no:"03"},
+  {key:"jobs",     slash:"///", en:"HELP WANTED",     jp:"求人とオファーのやりとり", no:"04"},
+  {key:"board",    slash:"///", en:"COMMUNITY BOARD", jp:"募集や相談を貼る掲示板", no:"05"}
+];
+
+var BAR = {
+  home:{eye:"Omukai Database", slash:"///", en:"HOME", jp:"大向小学校の同窓データベース"},
+  list:{eye:"Directory", slash:"///", en:"LIST", jp:"同級生の名簿と現在地"},
+  reunion:{eye:"Event", slash:"///", en:"CLASS REUNION", jp:"同窓会の候補日を決める"},
+  drinking:{eye:"Event", slash:"///", en:"DRINKING", jp:"飲み会のお店を投票で決める"},
+  jobs:{eye:"Board", slash:"///", en:"HELP WANTED", jp:"求人とオファーのやりとり"},
+  board:{eye:"Board", slash:"///", en:"COMMUNITY BOARD", jp:"募集や相談を貼る掲示板"}
+};
+
+var state = { view:"home", filter:"all", placeFilter:"all", offerTab:"received", schedMe:EVENT.me.slice() };
+
+function el(id){ return document.getElementById(id); }
+function initials(name){ var p = name.replace(/\s+/g," ").split(" "); return p.length>1 ? p[1].slice(0,2) : name.slice(0,2); }
+function byId(id){ for (var i=0;i<MEMBERS.length;i++){ if (MEMBERS[i].id===id) return MEMBERS[i]; } return null; }
+
+function go(key){
+  closeDrawer();
+  if (key === "signup"){ openSignup(); return; }
+  setView(key);
+}
+
+function setView(v){
+  state.view = v;
+  var hb = el("home-btn"); if (hb) hb.hidden = (v === "home");
+  var sec = document.querySelectorAll(".view");
+  for (var i=0;i<sec.length;i++){ sec[i].classList.toggle("is-active", sec[i].id==="view-"+v); }
+  var navs = document.querySelectorAll("#nav .nav-item");
+  for (var j=0;j<navs.length;j++){ navs[j].setAttribute("aria-current", navs[j].getAttribute("data-key")===v ? "page" : "false"); }
+  var b = BAR[v];
+  el("bar-eyebrow").textContent = b.eye;
+  el("bar-title").innerHTML = '<span class="slash">'+b.slash+'</span>'+b.en;
+  el("bar-lead").textContent = b.jp;
+  el("bar-action").innerHTML =
+      (v==="home") ? '<button class="btn btn-pri btn-sm" data-act="signup">/// SIGN UP</button>'
+    : (v==="reunion") ? '<button class="btn btn-pri btn-sm" data-act="share">共有リンクをコピー</button>'
+    : (v==="drinking") ? '<button class="btn btn-pri btn-sm" data-act="addplace">お店を追加</button>'
+    : (v==="board") ? '<button class="btn btn-pri btn-sm" data-act="post">投稿する</button>'
+    : (v==="list") ? '<button class="btn btn-sm" data-act="signup">自分を登録</button>' : "";
+  var act = el("bar-action").querySelector("[data-act]");
+  if (act){
+    var a = act.getAttribute("data-act");
+    act.onclick = function(){
+      if (a==="signup") openSignup();
+      else if (a==="post") openPost();
+      else if (a==="share") toast("共有リンクをコピーした");
+      else if (a==="addplace") toast("お店の追加は次の実装で対応予定");
+    };
+  }
+  var sc = document.querySelector(".scroll"); if (sc) sc.scrollTop = 0;
+}
+
+// build one menu row (home + drawer share this)
+function buildMenuRow(it){
+  var row = document.createElement("button");
+  row.className = "home-row";
+  row.innerHTML =
+    '<span class="slash">'+it.slash+'</span>' +
+    '<span class="hr-main"><span class="hr-en">'+it.en+'</span></span>' +
+    '<span class="hr-arrow">\u2192</span>';
+  row.onclick = function(){ go(it.key); };
+  return row;
+}
+function renderHome(){
+  var hub = el("home-menu"); hub.innerHTML = "";
+  MENU.forEach(function(it){ hub.appendChild(buildMenuRow(it)); });
+  var strip = el("home-strip"); strip.innerHTML = "";
+  MEMBERS.slice(0,9).forEach(function(m){
+    var d = document.createElement("button"); d.className = "strip-px"; d.title = m.name;
+    d.innerHTML = portrait(m.name);
+    d.onclick = function(){ openMember(m); };
+    strip.appendChild(d);
+  });
+}
+function renderDrawer(){
+  var dm = el("drawer-menu"); dm.innerHTML = "";
+  dm.appendChild(buildMenuRow({key:"home", slash:"///", en:"HOME", jp:"トップに戻る", no:"--"}));
+  MENU.forEach(function(it){ dm.appendChild(buildMenuRow(it)); });
+}
+
+function renderFilters(){
+  var f = el("filters"); f.innerHTML = "";
+  GALLERY_FILTERS.forEach(function(g){
+    var btn = document.createElement("button");
+    btn.className = "chip"; btn.textContent = g.label;
+    btn.setAttribute("aria-pressed", state.filter===g.key ? "true":"false");
+    btn.onclick = function(){ state.filter = g.key; renderFilters(); renderWall(); };
+    f.appendChild(btn);
+  });
+}
+function renderWall(){
+  var w = el("wall"); w.innerHTML = "";
+  var list = MEMBERS.filter(function(m){ return state.filter==="all" ? true : m.status===state.filter; });
+  el("ct-list").textContent = MEMBERS.length;
+  list.forEach(function(m, idx){
+    var st = STATUS[m.status];
+    var frame = document.createElement("div");
+    frame.className = "frame";
+    frame.style.animation = "fade .4s ease both"; frame.style.animationDelay = (idx*0.03)+"s";
+    frame.innerHTML =
+      '<span class="spot"></span>' +
+      '<button class="card">' +
+        '<div class="portrait">'+portrait(m.name)+'</div>' +
+        '<div class="card-body">' +
+          '<div class="card-name">'+m.name+'</div>' +
+          '<div class="card-job">'+m.job+'</div>' +
+          '<div class="card-co">'+m.co+' / '+m.area+'</div>' +
+          '<span class="status '+st.cls+'"><span class="d"></span>'+st.label+'</span>' +
+        '</div>' +
+      '</button>';
+    frame.querySelector(".card").onclick = function(){ openMember(m); };
+    w.appendChild(frame);
+  });
+}
+
+function scoreOf(mk){ return mk==="o" ? 2 : (mk==="t" ? 1 : 0); }
+function markGlyph(mk){ return mk==="o" ? "\u25CB" : (mk==="t" ? "\u25B3" : "\u00D7"); }
+function renderSchedule(){
+  el("ev-title").textContent = EVENT.title;
+  var responders = Object.keys(EVENT.responses).length + 1;
+  el("ev-meta").textContent = responders + "名が回答 / 候補 " + EVENT.dates.length + "日";
+  var scores = EVENT.dates.map(function(_, di){
+    var s = 0, ppl = 0;
+    Object.keys(EVENT.responses).forEach(function(id){ s += scoreOf(EVENT.responses[id][di]); if (EVENT.responses[id][di]==="o") ppl++; });
+    s += scoreOf(state.schedMe[di]); if (state.schedMe[di]==="o") ppl++;
+    return {di:di, s:s, ppl:ppl};
+  });
+  var best = scores.slice().sort(function(a,b){ return b.s - a.s; })[0];
+  el("ev-best").innerHTML =
+    '<div><div class="bk">Best date</div><div class="bd">'+EVENT.dates[best.di]+'</div></div>' +
+    '<div class="bn"><b>'+best.ppl+'</b><span>名が参加できる</span></div>';
+  var head = '<thead><tr><th class="who">メンバー</th>';
+  EVENT.dates.forEach(function(d, di){ head += '<th'+(di===best.di?' class="bestcol"':'')+'>'+d+'</th>'; });
+  head += '</tr></thead>';
+  var body = "<tbody>";
+  body += '<tr class="me-row"><td class="who">あなた<small>CONTENT DIR.</small></td>';
+  state.schedMe.forEach(function(mk, di){
+    body += '<td'+(di===best.di?' class="bestcol"':'')+'><button class="cell-btn" data-di="'+di+'"><span class="mark '+mk+'">'+markGlyph(mk)+'</span></button></td>';
+  });
+  body += '</tr>';
+  Object.keys(EVENT.responses).forEach(function(id){
+    var m = byId(id); if (!m) return;
+    body += '<tr><td class="who">'+m.name+'<small>'+m.job+'</small></td>';
+    EVENT.responses[id].forEach(function(mk, di){
+      body += '<td'+(di===best.di?' class="bestcol"':'')+'><span class="mark '+mk+'">'+markGlyph(mk)+'</span></td>';
+    });
+    body += '</tr>';
+  });
+  body += "</tbody>";
+  el("ev-table").innerHTML = head + body;
+  var cells = el("ev-table").querySelectorAll(".cell-btn");
+  for (var i=0;i<cells.length;i++){
+    cells[i].onclick = function(){
+      var di = parseInt(this.getAttribute("data-di"),10);
+      var cur = state.schedMe[di];
+      state.schedMe[di] = cur==="o" ? "t" : (cur==="t" ? "x" : "o");
+      renderSchedule();
+    };
+  }
+}
+
+function renderPlaceFilters(){
+  var f = el("place-filters"); f.innerHTML = "";
+  PLACE_FILTERS.forEach(function(g){
+    var btn = document.createElement("button");
+    btn.className = "chip"; btn.textContent = g.label;
+    btn.setAttribute("aria-pressed", state.placeFilter===g.key ? "true":"false");
+    btn.onclick = function(){ state.placeFilter = g.key; renderPlaceFilters(); renderPlaces(); };
+    f.appendChild(btn);
+  });
+}
+function renderPlaces(){
+  var list = PLACES.filter(function(p){ return state.placeFilter==="all" ? true : p.area===state.placeFilter; });
+  var top = list.slice().sort(function(a,b){ return b.votes - a.votes; })[0];
+  var wrap = el("place-list"); wrap.innerHTML = "";
+  list.forEach(function(p){
+    var row = document.createElement("div");
+    row.className = "place" + (top && p.id===top.id ? " lead-place" : "");
+    row.innerHTML =
+      '<div class="place-thumb"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 2v7a3 3 0 006 0V2M9 2v20M18 2c-1.5 1-2 4-2 7s.5 4 2 4v9"/></svg></div>' +
+      '<div class="place-main"><div class="place-name">'+p.name+'</div>' +
+        '<div class="place-tags"><span class="tag">'+p.genre+'</span><span class="tag">'+p.area+'</span><span class="tag">'+p.room+'</span><span class="tag">'+p.budget+'</span></div></div>' +
+      '<div class="vote"><span class="cnt">'+p.votes+'</span><button class="btn btn-sm">行きたい</button></div>';
+    row.querySelector("button").onclick = function(){ p.votes++; renderPlaces(); toast("「"+p.name+"」に投票した"); };
+    wrap.appendChild(row);
+  });
+}
+
+function renderOffers(){
+  var tabs = el("offer-tabs").querySelectorAll(".tab");
+  for (var i=0;i<tabs.length;i++){ tabs[i].setAttribute("aria-selected", tabs[i].getAttribute("data-tab")===state.offerTab ? "true":"false"); }
+  var arr = OFFERS[state.offerTab];
+  el("ct-jobs").textContent = OFFERS.received.length;
+  var wrap = el("offer-list"); wrap.innerHTML = "";
+  if (!arr.length){ wrap.innerHTML = '<div class="empty">まだオファーはない</div>'; return; }
+  arr.forEach(function(o){
+    var box = document.createElement("div");
+    box.className = "offer";
+    var actions = state.offerTab==="received"
+      ? '<button class="btn btn-pri btn-sm">話を聞く</button><button class="btn btn-sm">あとで</button>'
+      : '<button class="btn btn-sm">取り消す</button>';
+    box.innerHTML =
+      '<div class="offer-av" style="background:'+o.color+'">'+initials(o.name)+'</div>' +
+      '<div class="offer-main"><div class="offer-top"><span class="offer-name">'+o.name+'</span><span class="offer-role">'+o.role+'</span><span class="offer-time">'+o.time+'</span></div>' +
+        '<div class="offer-msg">'+o.msg+'</div><div class="offer-actions">'+actions+'</div></div>';
+    var bs = box.querySelectorAll(".offer-actions .btn");
+    for (var b=0;b<bs.length;b++){ bs[b].onclick = function(){ toast("操作は次の実装で対応予定"); }; }
+    wrap.appendChild(box);
+  });
+}
+
+function renderBoard(){
+  var wrap = el("board-list"); wrap.innerHTML = "";
+  BOARD.forEach(function(p, pi){
+    var box = document.createElement("div");
+    box.className = "post";
+    // replies html
+    var repliesHtml = "";
+    if (p.replies && p.replies.length){
+      repliesHtml += '<div class="replies">';
+      p.replies.forEach(function(rp){
+        repliesHtml += '<div class="reply">' +
+          '<div class="reply-av" style="background:'+rp.color+'">'+initials(rp.name)+'</div>' +
+          '<div class="reply-body"><span class="reply-name">'+rp.name+'</span><span class="reply-time">'+rp.time+'</span>' +
+          '<div class="reply-text">'+rp.text+'</div></div></div>';
+      });
+      repliesHtml += '</div>';
+    }
+    box.innerHTML =
+      '<div class="post-av" style="background:'+p.color+'">'+initials(p.name)+'</div>' +
+      '<div class="post-main">' +
+        '<div class="post-top"><span class="post-name">'+p.name+'</span><span class="post-cat">'+p.cat+'</span><span class="post-time">'+p.time+'</span></div>' +
+        '<div class="post-text">'+p.text+'</div>' +
+        '<div class="post-actions">' +
+          '<button class="post-btn like-btn'+(p.liked?' liked':'')+'"><span class="ic">'+(p.liked?'\u2665':'\u2661')+'</span>'+p.likes+'</button>' +
+          '<button class="post-btn reply-btn"><span class="ic">\u21A9</span>返信</button>' +
+        '</div>' +
+        repliesHtml +
+        '<div class="reply-form" style="display:none"><input class="reply-input" type="text" placeholder="返信を入力..."><button class="btn btn-pri btn-sm reply-send">送信</button></div>' +
+      '</div>';
+    // like
+    box.querySelector(".like-btn").onclick = function(){
+      p.liked = !p.liked; p.likes += p.liked ? 1 : -1; renderBoard();
+    };
+    // reply toggle
+    var replyForm = box.querySelector(".reply-form");
+    box.querySelector(".reply-btn").onclick = function(){
+      replyForm.style.display = replyForm.style.display==="none" ? "flex" : "none";
+      if (replyForm.style.display==="flex") replyForm.querySelector(".reply-input").focus();
+    };
+    // reply send
+    box.querySelector(".reply-send").onclick = function(){
+      var input = replyForm.querySelector(".reply-input");
+      var txt = input.value.trim(); if (!txt) return;
+      if (!p.replies) p.replies = [];
+      p.replies.push({name:"あなた", color:"#9F9BC0", text:txt, time:"たった今"});
+      renderBoard();
+    };
+    wrap.appendChild(box);
+  });
+}
+
+// member modal
+function openMember(m){
+  var st = STATUS[m.status];
+  el("modal").innerHTML =
+    '<div class="modal-hd"><div class="px">'+portrait(m.name)+'</div>' +
+      '<div><div style="font-size:19px;font-weight:600">'+m.name+'</div>' +
+      '<div style="color:var(--gray);font-size:13px;margin-top:2px">'+m.job+'</div></div>' +
+      '<button class="x-close" id="x1">\u00D7</button></div>' +
+    '<div class="modal-bd"><span class="status '+st.cls+'"><span class="d"></span>'+st.label+'</span>' +
+      '<div class="kv" style="margin-top:16px"><span class="k">所属</span><span class="v">'+m.co+'</span></div>' +
+      '<div class="kv"><span class="k">エリア</span><span class="v">'+m.area+'</span></div>' +
+      '<div class="kv"><span class="k">ひとこと</span><span class="v">'+m.bio+'</span></div>' +
+      '<div class="modal-ft"><button class="btn btn-sm" id="x-invite">日程に誘う</button>' +
+      '<button class="btn btn-pri btn-sm" id="x-offer">オファーを送る</button></div></div>';
+  openScrim();
+  el("x1").onclick = closeScrim;
+  el("x-invite").onclick = function(){ closeScrim(); setView("reunion"); toast(m.name+" を候補に追加した"); };
+  el("x-offer").onclick = function(){ openOfferForm(m); };
+}
+function openOfferForm(m){
+  el("modal").innerHTML =
+    '<div class="modal-hd"><div class="px">'+portrait(m.name)+'</div>' +
+      '<div><div style="font-size:18px;font-weight:600">'+m.name+' へオファー</div>' +
+      '<div style="color:var(--gray);font-size:12.5px;margin-top:2px">'+m.job+' / '+m.co+'</div></div>' +
+      '<button class="x-close" id="x2">\u00D7</button></div>' +
+    '<div class="modal-bd">' +
+      '<div class="field"><label>依頼したい役割</label><input id="of-role" type="text" placeholder="例: 店舗の撮影、技術顧問、デザイン"></div>' +
+      '<div class="field"><label>メッセージ</label><textarea id="of-msg" placeholder="どんな相談か、ひとことで"></textarea></div>' +
+      '<div class="modal-ft"><button class="btn btn-sm" id="x-back">戻る</button>' +
+      '<button class="btn btn-pri btn-sm" id="x-send">送信する</button></div></div>';
+  el("x2").onclick = closeScrim;
+  el("x-back").onclick = function(){ openMember(m); };
+  el("x-send").onclick = function(){
+    var role = el("of-role").value.trim() || "相談";
+    var msg = el("of-msg").value.trim() || "今度ゆっくり話したい。";
+    OFFERS.sent.unshift({from:m.id, name:m.name, role:role, time:"たった今", msg:msg, color:"#9F9BC0"});
+    state.offerTab = "sent";
+    closeScrim(); renderOffers(); setView("jobs");
+    toast(m.name+" にオファーを送った");
+  };
+}
+
+// sign up modal
+function openSignup(){
+  el("modal").innerHTML =
+    '<div class="modal-hd"><div><div style="font-family:var(--mono);color:var(--accent);font-size:11px;letter-spacing:.18em">/// SIGN UP</div>' +
+      '<div style="font-size:19px;font-weight:600;margin-top:4px">名簿に登録する</div></div>' +
+      '<button class="x-close" id="su-x">\u00D7</button></div>' +
+    '<div class="modal-bd">' +
+      '<div class="field"><label>名前</label><input id="su-name" type="text" placeholder="例: 山田 たろう"></div>' +
+      '<div class="field"><label>メールアドレス</label><input id="su-email" type="email" placeholder="例: taro@example.com"></div>' +
+      '<div class="two"><div class="field"><label>現在の職業</label><input id="su-job" type="text" placeholder="例: エンジニア"></div>' +
+      '<div class="field"><label>エリア</label><input id="su-area" type="text" placeholder="例: 渋谷"></div></div>' +
+      '<div class="field"><label>所属 / 会社</label><input id="su-co" type="text" placeholder="例: フリーランス"></div>' +
+      '<div class="field"><label>ステータス</label><select id="su-status">' +
+        '<option value="connect">つながり歓迎</option><option value="open">オファー歓迎</option>' +
+        '<option value="hire">求人中</option><option value="closed">募集なし</option></select></div>' +
+      '<div class="field"><label>ひとこと</label><textarea id="su-bio" placeholder="同級生に向けて一言"></textarea></div>' +
+      '<div class="modal-ft"><button class="btn btn-sm" id="su-cancel">やめる</button>' +
+      '<button class="btn btn-pri btn-sm" id="su-go">登録する</button></div></div>';
+  openScrim();
+  el("su-x").onclick = closeScrim;
+  el("su-cancel").onclick = closeScrim;
+  el("su-go").onclick = function(){
+    var name = el("su-name").value.trim();
+    if (!name){ toast("名前を入れてください"); return; }
+    var nm = {
+      id:"new"+(Date.now()),
+      name:name,
+      job:el("su-job").value.trim() || "未設定",
+      co:el("su-co").value.trim() || "未設定",
+      area:el("su-area").value.trim() || "-",
+      status:el("su-status").value,
+      bio:el("su-bio").value.trim() || "よろしくお願いします。"
+    };
+    MEMBERS.unshift(nm);
+    renderWall(); renderHome();
+    closeScrim(); setView("list");
+    toast(name+" を名簿に追加した");
+  };
+}
+
+// board compose modal
+function openPost(){
+  el("modal").innerHTML =
+    '<div class="modal-hd"><div><div style="font-family:var(--mono);color:var(--accent);font-size:11px;letter-spacing:.18em">/// COMMUNITY BOARD</div>' +
+      '<div style="font-size:19px;font-weight:600;margin-top:4px">掲示板に投稿</div></div>' +
+      '<button class="x-close" id="po-x">\u00D7</button></div>' +
+    '<div class="modal-bd">' +
+      '<div class="field"><label>カテゴリ</label><select id="po-cat"><option>募集</option><option>相談</option><option>イベント</option><option>物件</option><option>お知らせ</option></select></div>' +
+      '<div class="field"><label>本文</label><textarea id="po-text" placeholder="募集や相談の内容を書く"></textarea></div>' +
+      '<div class="modal-ft"><button class="btn btn-sm" id="po-cancel">やめる</button>' +
+      '<button class="btn btn-pri btn-sm" id="po-go">投稿する</button></div></div>';
+  openScrim();
+  el("po-x").onclick = closeScrim;
+  el("po-cancel").onclick = closeScrim;
+  el("po-go").onclick = function(){
+    var text = el("po-text").value.trim();
+    if (!text){ toast("本文を入れてください"); return; }
+    BOARD.unshift({name:"あなた", cat:el("po-cat").value, time:"たった今", text:text, color:"#9F9BC0"});
+    closeScrim(); renderBoard(); setView("board");
+    toast("掲示板に投稿した");
+  };
+}
+
+function openScrim(){ el("scrim").classList.add("is-open"); }
+function closeScrim(){ el("scrim").classList.remove("is-open"); }
+el("scrim").addEventListener("click", function(e){ if (e.target === el("scrim")) closeScrim(); });
+
+// drawer
+function openDrawer(){ el("menu-scrim").classList.add("is-open"); el("hamb").setAttribute("aria-expanded","true"); }
+function closeDrawer(){ el("menu-scrim").classList.remove("is-open"); el("hamb").setAttribute("aria-expanded","false"); }
+el("hamb").addEventListener("click", function(){
+  if (el("menu-scrim").classList.contains("is-open")) closeDrawer(); else openDrawer();
+});
+el("drawer-x").addEventListener("click", closeDrawer);
+el("home-btn").addEventListener("click", function(){ go("home"); });
+el("menu-scrim").addEventListener("click", function(e){ if (e.target === el("menu-scrim")) closeDrawer(); });
+
+document.addEventListener("keydown", function(e){ if (e.key === "Escape"){ closeScrim(); closeDrawer(); } });
+
+// toast
+var toastTimer = null;
+function toast(msg){
+  var t = el("toast"); t.textContent = msg; t.classList.add("show");
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ t.classList.remove("show"); }, 2200);
+}
+
+// wire nav (rail items)
+var railItems = document.querySelectorAll("#nav .nav-item");
+for (var i=0;i<railItems.length;i++){
+  railItems[i].addEventListener("click", function(){ go(this.getAttribute("data-key")); });
+}
+var offerTabs = el("offer-tabs").querySelectorAll(".tab");
+for (var t=0;t<offerTabs.length;t++){
+  offerTabs[t].addEventListener("click", function(){ state.offerTab = this.getAttribute("data-tab"); renderOffers(); });
+}
+
+// init
+renderHome();
+renderDrawer();
+renderFilters();
+renderWall();
+renderSchedule();
+renderPlaceFilters();
+renderPlaces();
+renderOffers();
+renderBoard();
+setView("home");
+</script>
+</body>
+</html>
