@@ -206,6 +206,30 @@ tr.me-row td.who{color:var(--lilac)}
 .offer-actions{display:flex;gap:8px;margin-top:12px}
 .empty{text-align:center;color:var(--muted);padding:46px 0;font-size:13.5px}
 
+/* donation */
+.don-tabs{display:flex;gap:0;margin-bottom:28px;border:1px solid var(--line-2);border-radius:12px;overflow:hidden}
+.don-tab{flex:1;background:none;border:0;color:var(--gray);font-size:12px;font-weight:600;padding:12px 8px;transition:.16s;letter-spacing:.04em}
+.don-tab:hover{color:var(--ink);background:rgba(148,149,151,.06)}
+.don-tab[aria-selected="true"]{color:#23222F;background:var(--accent)}
+.don-card{display:flex;gap:16px;padding:18px 0;border-bottom:1px solid var(--line)}
+.don-card:last-child{border-bottom:0}
+.don-icon{width:46px;height:46px;border-radius:11px;flex:0 0 auto;display:grid;place-items:center;font-size:20px;background:var(--portrait)}
+.don-main{flex:1;min-width:0}
+.don-top{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
+.don-name{font-weight:600;font-size:14.5px}
+.don-cat{font-family:var(--mono);font-size:10px;letter-spacing:.06em;padding:3px 8px;border-radius:6px;border:1px solid var(--line-2);color:var(--gray)}
+.don-cat.money{color:#7FD1A0;border-color:rgba(127,209,160,.3)}
+.don-cat.skill{color:var(--accent);border-color:rgba(242,223,104,.3)}
+.don-cat.goods{color:var(--lilac);border-color:rgba(159,155,192,.3)}
+.don-cat.time{color:#D98A8A;border-color:rgba(217,138,138,.3)}
+.don-time{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.don-text{color:var(--gray);font-size:13px;margin-top:6px;line-height:1.65}
+.don-actions{display:flex;gap:8px;margin-top:11px;align-items:center}
+.don-thanks{font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:2px}
+.don-stat{display:flex;gap:18px;margin-bottom:24px;padding:16px 20px;background:rgba(242,223,104,.06);border:1px solid rgba(242,223,104,.18);border-radius:12px}
+.don-stat-item{text-align:center}
+.don-stat-n{font-family:var(--mono);font-size:22px;font-weight:600;color:var(--accent)}
+.don-stat-l{font-size:11px;color:var(--muted);margin-top:3px;font-family:var(--mono);letter-spacing:.06em}
 /* board */
 .board-new{margin-bottom:20px}
 .post{display:flex;gap:14px;padding:18px 0;border-bottom:1px solid var(--line)}
@@ -319,6 +343,7 @@ tr.me-row td.who{color:var(--lilac)}
       <button class="nav-item" data-key="drinking"><span class="rl-slash">///</span>DRINKING</button>
       <button class="nav-item" data-key="jobs"><span class="rl-slash">///</span>HELP WANTED<span class="ct" id="ct-jobs"></span></button>
       <button class="nav-item" data-key="board"><span class="rl-slash">///</span>COMMUNITY BOARD</button>
+      <button class="nav-item" data-key="donation"><span class="rl-slash">///</span>DONATION</button>
       <div class="nav-sep"></div>
       <button class="nav-item nav-signup" data-key="signup"><span class="rl-slash">///</span>SIGN UP</button>
     </nav>
@@ -399,6 +424,15 @@ tr.me-row td.who{color:var(--lilac)}
 
       <section class="view" id="view-board">
         <div class="panel-card"><div id="board-list"></div></div>
+      </section>
+
+      <section class="view" id="view-donation">
+        <div class="don-stat" id="don-stat"></div>
+        <div class="don-tabs" id="don-tabs">
+          <button class="don-tab" data-dt="give" aria-selected="true">&#x2665; GIVE ─ 提供する</button>
+          <button class="don-tab" data-dt="need" aria-selected="false">&#x25CE; NEED ─ 求める</button>
+        </div>
+        <div class="panel-card"><div id="don-list"></div></div>
       </section>
 
     </div>
@@ -558,7 +592,8 @@ var MENU = [
   {key:"reunion",  slash:"///", en:"CLASS REUNION",   jp:"同窓会の候補日を決める", no:"02"},
   {key:"drinking", slash:"///", en:"DRINKING",        jp:"飲み会のお店を投票で決める", no:"03"},
   {key:"jobs",     slash:"///", en:"HELP WANTED",     jp:"求人とオファーのやりとり", no:"04"},
-  {key:"board",    slash:"///", en:"COMMUNITY BOARD", jp:"募集や相談を貼る掲示板", no:"05"}
+  {key:"board",    slash:"///", en:"COMMUNITY BOARD", jp:"募集や相談を貼る掲示板", no:"05"},
+  {key:"donation", slash:"///", en:"DONATION",        jp:"助け合いの場", no:"06"}
 ];
 
 var BAR = {
@@ -567,7 +602,8 @@ var BAR = {
   reunion:{eye:"Event", slash:"///", en:"CLASS REUNION", jp:"同窓会の候補日を決める"},
   drinking:{eye:"Event", slash:"///", en:"DRINKING", jp:"飲み会のお店を投票で決める"},
   jobs:{eye:"Board", slash:"///", en:"HELP WANTED", jp:"求人とオファーのやりとり"},
-  board:{eye:"Board", slash:"///", en:"COMMUNITY BOARD", jp:"募集や相談を貼る掲示板"}
+  board:{eye:"Board", slash:"///", en:"COMMUNITY BOARD", jp:"募集や相談を貼る掲示板"},
+  donation:{eye:"Mutual Aid", slash:"///", en:"DONATION", jp:"お金・スキル・モノ・時間で助け合う"}
 };
 
 var state = { view:"home", filter:"all", placeFilter:"all", offerTab:"received", schedMe:EVENT.me.slice() };
@@ -598,6 +634,7 @@ function setView(v){
     : (v==="reunion") ? '<button class="btn btn-pri btn-sm" data-act="share">共有リンクをコピー</button>'
     : (v==="drinking") ? '<button class="btn btn-pri btn-sm" data-act="addplace">お店を追加</button>'
     : (v==="board") ? '<button class="btn btn-pri btn-sm" data-act="post">投稿する</button>'
+    : (v==="donation") ? '<button class="btn btn-pri btn-sm" data-act="donpost">/// 投稿する</button>'
     : (v==="list") ? '<button class="btn btn-sm" data-act="signup">自分を登録</button>' : "";
   var act = el("bar-action").querySelector("[data-act]");
   if (act){
@@ -605,6 +642,7 @@ function setView(v){
     act.onclick = function(){
       if (a==="signup") openSignup();
       else if (a==="post") openPost();
+      else if (a==="donpost") openDonPost();
       else if (a==="share") toast("共有リンクをコピーした");
       else if (a==="addplace") toast("お店の追加は次の実装で対応予定");
     };
@@ -769,6 +807,90 @@ function renderOffers(){
     for (var b=0;b<bs.length;b++){ bs[b].onclick = function(){ toast("操作は次の実装で対応予定"); }; }
     wrap.appendChild(box);
   });
+}
+
+var DON_DATA = {
+  give:[
+    {name:"中村 はる", cat:"skill", catLabel:"スキル", icon:"\uD83D\uDCF7", time:"1日前", text:"写真の基本を教えられます。カメラを持っていれば初心者でもOK。2時間程度、無償で。", thanks:4, helped:false},
+    {name:"渡辺 たける", cat:"goods", catLabel:"モノ", icon:"\uD83D\uDCE6", time:"3日前", text:"引越しのため不用品があります。折りたたみ机・椅子セット・本棚。取りに来られる方へ。", thanks:6, helped:false},
+    {name:"山本 ひかり", cat:"time", catLabel:"時間", icon:"\u23F0", time:"4日前", text:"週末に子どもの勉強を見るお手伝いができます。小学生の算数・国語まで。", thanks:3, helped:false},
+    {name:"加藤 ゆい", cat:"skill", catLabel:"スキル", icon:"\uD83C\uDF73", time:"1週間前", text:"料理の基本を一緒に学びませんか。包丁の扱いから一汁三菜まで教えます。食材費だけもらえれば。", thanks:8, helped:false}
+  ],
+  need:[
+    {name:"高橋 りく", cat:"skill", catLabel:"スキル", icon:"\uD83D\uDCBB", time:"2日前", text:"確定申告の書き方を教えてほしい。フリーランス1年目で初めてです。", thanks:2, helped:false},
+    {name:"佐藤 みなと", cat:"money", catLabel:"お金", icon:"\uD83D\uDCB0", time:"5日前", text:"機材が壊れて次の仕事に支障が出ています。3万円ほど一時的に助けてもらえると助かります。返済します。", thanks:5, helped:false},
+    {name:"吉田 かい", cat:"time", catLabel:"時間", icon:"\u23F0", time:"1週間前", text:"引越し作業を手伝ってほしい。7月第2週の土曜午前。近くの人いたらお願いしたいです。", thanks:1, helped:false}
+  ]
+};
+var donTab = "give";
+
+var CAT_CLASS = {money:"money", skill:"skill", goods:"goods", time:"time"};
+
+function renderDonStat(){
+  var gLen = DON_DATA.give.length, nLen = DON_DATA.need.length;
+  var helped = DON_DATA.give.filter(function(d){return d.helped;}).length + DON_DATA.need.filter(function(d){return d.helped;}).length;
+  el("don-stat").innerHTML =
+    '<div class="don-stat-item"><div class="don-stat-n">'+gLen+'</div><div class="don-stat-l">GIVE</div></div>' +
+    '<div class="don-stat-item"><div class="don-stat-n">'+nLen+'</div><div class="don-stat-l">NEED</div></div>' +
+    '<div class="don-stat-item"><div class="don-stat-n">'+(gLen+nLen)+'</div><div class="don-stat-l">TOTAL</div></div>' +
+    '<div class="don-stat-item"><div class="don-stat-n">'+helped+'</div><div class="don-stat-l">HELPED</div></div>';
+}
+
+function renderDonation(){
+  var tabs = el("don-tabs").querySelectorAll(".don-tab");
+  for (var i=0;i<tabs.length;i++){ tabs[i].setAttribute("aria-selected", tabs[i].getAttribute("data-dt")===donTab ? "true":"false"); }
+  renderDonStat();
+  var arr = DON_DATA[donTab];
+  var wrap = el("don-list"); wrap.innerHTML = "";
+  if (!arr.length){ wrap.innerHTML = '<div class="empty">まだ投稿がない</div>'; return; }
+  arr.forEach(function(d, di){
+    var box = document.createElement("div"); box.className = "don-card";
+    box.innerHTML =
+      '<div class="don-icon">'+d.icon+'</div>' +
+      '<div class="don-main">' +
+        '<div class="don-top"><span class="don-name">'+d.name+'</span><span class="don-cat '+CAT_CLASS[d.cat]+'">'+d.catLabel+'</span><span class="don-time">'+d.time+'</span></div>' +
+        '<div class="don-text">'+d.text+'</div>' +
+        '<div class="don-actions">' +
+          '<button class="btn btn-pri btn-sm help-btn">'+(d.helped ? '\u2665 助けた' : '\u2661 助ける')+'</button>' +
+          (d.thanks>0 ? '<span class="don-thanks">'+d.thanks+' 人が反応</span>' : '') +
+          '<button class="btn btn-sm dm-btn" style="margin-left:auto">DM</button>' +
+        '</div>' +
+      '</div>';
+    box.querySelector(".help-btn").onclick = function(){
+      d.helped = !d.helped; d.thanks += d.helped ? 1 : -1;
+      renderDonation();
+    };
+    box.querySelector(".dm-btn").onclick = function(){ toast(d.name+" にDMを送った"); };
+    wrap.appendChild(box);
+  });
+}
+
+function openDonPost(){
+  el("modal").innerHTML =
+    '<div class="modal-hd"><div><div style="font-family:var(--mono);color:var(--accent);font-size:11px;letter-spacing:.18em">/// DONATION</div>' +
+      '<div style="font-size:18px;font-weight:600;margin-top:4px">投稿する</div></div>' +
+      '<button class="x-close" id="dp-x">\u00D7</button></div>' +
+    '<div class="modal-bd">' +
+      '<div class="field"><label>種類</label><select id="dp-type"><option value="give">GIVE ─ 提供する</option><option value="need">NEED ─ 求める</option></select></div>' +
+      '<div class="field"><label>カテゴリ</label><select id="dp-cat"><option value="skill">スキル</option><option value="money">お金</option><option value="goods">モノ</option><option value="time">時間</option></select></div>' +
+      '<div class="field"><label>内容</label><textarea id="dp-text" placeholder="何を提供できるか、または何を求めているか"></textarea></div>' +
+      '<div class="modal-ft"><button class="btn btn-sm" id="dp-cancel">やめる</button>' +
+      '<button class="btn btn-pri btn-sm" id="dp-go">投稿する</button></div></div>';
+  openScrim();
+  el("dp-x").onclick = closeScrim;
+  el("dp-cancel").onclick = closeScrim;
+  el("dp-go").onclick = function(){
+    var text = el("dp-text").value.trim();
+    if (!text){ toast("内容を入れてください"); return; }
+    var type = el("dp-type").value;
+    var cat = el("dp-cat").value;
+    var catLabels = {skill:"スキル", money:"お金", goods:"モノ", time:"時間"};
+    var icons = {skill:"\uD83D\uDCA1", money:"\uD83D\uDCB0", goods:"\uD83D\uDCE6", time:"\u23F0"};
+    DON_DATA[type].unshift({name:"あなた", cat:cat, catLabel:catLabels[cat], icon:icons[cat], time:"たった今", text:text, thanks:0, helped:false});
+    donTab = type;
+    closeScrim(); renderDonation(); setView("donation");
+    toast("投稿した");
+  };
 }
 
 function renderBoard(){
@@ -971,6 +1093,11 @@ renderPlaceFilters();
 renderPlaces();
 renderOffers();
 renderBoard();
+renderDonation();
+var donTabs = el("don-tabs").querySelectorAll(".don-tab");
+for (var d=0;d<donTabs.length;d++){
+  donTabs[d].addEventListener("click", function(){ donTab = this.getAttribute("data-dt"); renderDonation(); });
+}
 setView("home");
 </script>
 </body>
